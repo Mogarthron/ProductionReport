@@ -25,7 +25,8 @@ class GeneralReport:
         cols = ['Data', 'Brygada', 'Warsztat', 'NrKarty', 'Kategoria', 'Forma',
                 'Odbiorca', 'Brutto', 'BrakiRazem', 'WAGA_BRUTTO', 'WAGA_NETTO', 'CzasPracy']
 
-        print(self.__Data[cols].to_string(index=False))
+        # print(self.__Data[cols].to_string(index=False))
+        return self.__Data[cols]
 
     def GeneralDailyReport(self):
 
@@ -41,10 +42,10 @@ class GeneralReport:
         print(self.__Data[cols].to_string(index=False))
 
 
-begin = datetime.date(2020, 7, 13)
-end = datetime.date(2020, 7, 17)
-gp = GeneralReport(begin, end)
-gp.ProductionReport()
+# begin = datetime.date(2020, 7, 13)
+# end = datetime.date(2020, 7, 17)
+# gp = GeneralReport(begin, end)
+# gp.ProductionReport()
 
 
 class Summary:
@@ -170,7 +171,9 @@ class Report:
         df2 = listOfDataFrames[1]
 
         # Create a Pandas Excel writer using XlsxWriter as the engine.
-        writer = ExcelWriter('Report.xlsx', engine='openpyxl')
+
+        outputPath = './Resources/Output/Report.xlsx'
+        writer = ExcelWriter(outputPath, engine='openpyxl')
 
         # Write each dataframe to a different worksheet.
         df1.to_excel(writer, index=False, sheet_name=sheetNames[0])
@@ -181,12 +184,15 @@ class Report:
         writer.save()
 
 
-# df1 = GeneralReport('01.07.2020', '15.07.2020')
-# df2 = ProductionSummary('01.07.2020', '15.07.2020')
+begin = datetime.datetime(2020, 7, 1)
+end = datetime.datetime(2020, 7, 31)
 
-# sheetNames = ['Productron_Report', 'Summary']
-# listOfDataFrames = [df1.ProductionReport(), df2.ProductionSummary()]
+df1 = GeneralReport(begin, end)
+df2 = ProductionSummary('01.07.2020', '31.07.2020')
 
-# report = Report()
+sheetNames = ['Productron_Report', 'Summary']
+listOfDataFrames = [df1.ProductionReport(), df2.ProductionSummary()]
 
-# report.ReportToExcel(listOfDataFrames, sheetNames)
+report = Report()
+
+report.ReportToExcel(listOfDataFrames, sheetNames)
