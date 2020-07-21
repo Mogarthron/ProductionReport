@@ -1,0 +1,11 @@
+select 
+    a."Dzm" as "Data",
+	a."Zmiana" as "Brygada",
+	sum(b."Brutto") as "Brutto",
+	sum(b."Braki razem") as "BrakiRazem",
+	sum(c."WAGA_BRUTTO"*b."Brutto")/1000 as "WydobycieBrutto"
+from "Formowanie" a
+inner join "Sortownia" b on a."Nr karty formowania" = b."Nr karty formowania"
+inner join "Stany" c on a."Nr karty formowania" = c."Nr karty formowania"
+group by a."Dzm", a."Zmiana"
+having a."Dzm" between ? and ? 

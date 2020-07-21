@@ -1,0 +1,29 @@
+select 
+	a."Dzm" as "Data", 
+	a."Zmiana" as "Brygada", 
+	a."Warsztat", 
+	a."Nr karty formowania" as "NrKarty", 
+	c."K" as "Kategoria", 
+	c."Forma", 
+	c."Odbiorca", 
+	b."Brutto",
+	b."Braki masy ml" as "BrakiMasyMl",
+	b.BRAKI_MASY_BZB,
+	b."Braki formowania" as "BrakiFormowania",
+	b."Braki odprezania" as "BrakiOdprezania", 
+	b."Braki opekiwania" as "BrakiOpekiwania", 
+	b."Stluczka",
+	b."Braki inne" as "BrakiInne",
+	b."Braki razem" as "BrakiRazem", 
+	c."WAGA_BRUTTO", 
+	c."WAGA_NETTO", 
+	a."Sr. czas pracy zesp." as "CzasPracy",
+	d.WYKONANIE
+from "Formowanie" a
+inner join "Sortownia" b on a."Nr karty formowania" = b."Nr karty formowania"
+inner join "Stany" c on a."Nr karty formowania" = c."Nr karty formowania"
+inner join "PLANOWANIE" d on c.PLAN_ID = d.ID
+where a."Dzm" between ? and ?
+order by a."Dzm", a."Zmiana", a."Warsztat"
+
+

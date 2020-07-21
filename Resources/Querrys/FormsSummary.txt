@@ -1,0 +1,12 @@
+select 
+    c."Odbiorca",
+    c."Forma" as "Forma",
+    count(a."Nr karty formowania") as "LiczbaFormowan",
+	sum(b."Brutto") as "Brutto",
+	sum(b."Netto") as "Netto",
+	sum(c."WAGA_BRUTTO"*b."Brutto")/1000 as "WydobycieBrutto"
+from "Formowanie" a
+inner join "Sortownia" b on a."Nr karty formowania" = b."Nr karty formowania"
+inner join "Stany" c on a."Nr karty formowania" = c."Nr karty formowania"
+group by c."Odbiorca", c."Forma"
+having a."Dzm" between ? and ? 
