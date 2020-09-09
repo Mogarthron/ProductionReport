@@ -36,16 +36,10 @@ class GeneralReport:
         self.__Data['ProcentOdpadu'] = self.__Data['BrakiRazem'] / \
             self.__Data['Brutto']
 
-        cols = ['Data', 'Brygada', 'Kategoria', 'Forma',
-                'Odbiorca', 'Brutto', 'ProdukcjaNetto', 'ProcentOdpadu']
+        cols = ['Data', 'Brygada', 'Warsztat', 'Kategoria', 'Forma',
+                'Odbiorca', 'Brutto', 'ProdukcjaNetto', 'ProcentOdpadu', 'WAGA_BRUTTO']
 
-        print(self.__Data[cols].to_string(index=False))
-
-
-# begin = datetime.date(2020, 7, 13)
-# end = datetime.date(2020, 7, 17)
-# gp = GeneralReport(begin, end)
-# gp.ProductionReport()
+        return self.__Data[cols]
 
 
 class Summary:
@@ -59,15 +53,7 @@ class Summary:
         DailyPullRate = self.SummaryData.groupby(
             self.SummaryData['Data'])
 
-        print(DailyPullRate)
-
-
-# begin = datetime.date(2020, 7, 13)
-# end = datetime.date(2020, 7, 17)
-
-# summ = Summary(begin, end)
-
-# summ.DailyProductionSummary()
+        print(DailyPullRate.sum())
 
 
 class ProductionSummary:
@@ -158,10 +144,6 @@ class ProductionSummary:
         return arr
 
 
-# summ = ProductionSummary('01.07.2020', '17.07.2020')
-# print(summ.ProductionSummary())
-
-
 class Report:
 
     def ReportToExcel(self, listOfDataFrames, sheetNames):
@@ -182,17 +164,3 @@ class Report:
         writer.index = False
         # Close the Pandas Excel writer and output the Excel file.
         writer.save()
-
-
-begin = datetime.datetime(2020, 7, 1)
-end = datetime.datetime(2020, 7, 31)
-
-df1 = GeneralReport(begin, end)
-df2 = ProductionSummary('01.07.2020', '31.07.2020')
-
-sheetNames = ['Productron_Report', 'Summary']
-listOfDataFrames = [df1.ProductionReport(), df2.ProductionSummary()]
-
-report = Report()
-
-report.ReportToExcel(listOfDataFrames, sheetNames)

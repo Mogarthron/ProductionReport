@@ -95,20 +95,15 @@ class GetDataFromXlsx:
         # print('Moc [KWh]:', df.iloc[:, 3].sum())
 
 
-# mr = GetDataFromXlsx('2020')
-
-# mr.ShowMeltingReport(datetime(2020, 2, 6, 0), datetime(2020, 2, 7, 0))
-
-
 class MeltingReport:
 
     def __Constring(self):
         path = './Resources/ConnectionStrings/ConnectionMSSQL.txt'
         file = open(path, 'r')
-        data = file.read()
+        constring = file.read()
         file.close()
 
-        return data
+        return constring
 
     def ShowMeltingReport(self):
 
@@ -121,8 +116,8 @@ class MeltingReport:
 
     def InsertRowToDB(self, paramList):
         querry = 'insert into RaportTopiarza(CzasWpisu,ZasypWE,PoziomWE,Moc,BaniakWE,ZasypWG,PoziomWG,Gaz,BaniakWG) values(?,?,?,?,?,?,?,?,?)'
-        constring = 'Driver={SQL Server};Server=DESKTOP-C82KD4L;Database=Raporty;Trusted_Connection=yes;'
-        conn = pyodbc.connect(constring)
+
+        conn = pyodbc.connect(self.__Constring())
 
         cursor = conn.cursor()
 
@@ -130,19 +125,21 @@ class MeltingReport:
                        paramList[4], paramList[5], paramList[6], paramList[7], paramList[8])
         conn.commit()
 
+        conn.close()
 
-date = '2020.07.07 21:00'
-zasypWE = '5'
-poziomWE = '9'
-moc = 175.5
-baniakWE = 1
-zasypWG = '11'
-poziomWG = '8'
-gaz = 130
-baniakWG = 3
 
-parametersList = [date, zasypWE, poziomWE, moc,
-                  baniakWE, zasypWG, poziomWG, gaz, baniakWG]
+# date = '2020.08.07 13:00'
+# zasypWE = None
+# poziomWE = None
+# moc = None
+# baniakWE = None
+# zasypWG = None
+# poziomWG = None
+# gaz = 95
+# baniakWG = None
 
-mr = MeltingReport()
-mr.ShowMeltingReport()
+# parametersList = [date, zasypWE, poziomWE, moc,
+#                   baniakWE, zasypWG, poziomWG, gaz, baniakWG]
+
+# mr = MeltingReport()
+# mr.InsertRowToDB(parametersList)

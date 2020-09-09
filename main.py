@@ -1,1 +1,3 @@
-print('hellllo')
+import BusinessLogic as logic
+
+logic.SimplyDayliReport()
