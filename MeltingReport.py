@@ -8,6 +8,8 @@ import pyodbc
 class GetDataFromXlsx:
 
     def __init__(self, procedure):
+        '''procedure: title of worksheet'''
+
         self.__meltingReport = pd.read_excel(
             './Resources/Tabele.xlsx', procedure)
 
@@ -128,18 +130,9 @@ class MeltingReport:
         conn.close()
 
 
-# date = '2020.08.07 13:00'
-# zasypWE = None
-# poziomWE = None
-# moc = None
-# baniakWE = None
-# zasypWG = None
-# poziomWG = None
-# gaz = 95
-# baniakWG = None
+raport = GetDataFromXlsx('2020')
 
-# parametersList = [date, zasypWE, poziomWE, moc,
-#                   baniakWE, zasypWG, poziomWG, gaz, baniakWG]
+start = datetime(2020, 9, 16, 6)
+end = datetime(2020, 9, 17, 6)
 
-# mr = MeltingReport()
-# mr.InsertRowToDB(parametersList)
+print(raport.ShowMeltingReport(start, end))

@@ -1,5 +1,5 @@
 import pandas as pd
-from pandas import DataFrame, ExcelWriter
+from pandas import DataFrame, ExcelWriter, Series
 import numpy as np
 from connectFDB import TableGenerator, GetDataFromFDB
 import calendar
@@ -10,23 +10,23 @@ import matplotlib.pyplot as plt
 
 class GeneralReport:
 
-    # columns = ['Data', 'Brygada', 'Warsztat', 'NrKarty', 'Kategoria', 'Forma',
-        #        'Odbiorca', 'Brutto', 'BrakiMasyMl', 'BRAKI_MASY_BZB', 'BrakiFormowania',
-        #        'BrakiOdprezania', 'BrakiOpekiwania', 'Stluczka', 'BrakiInne', 'BrakiRazem',
-        #        'WAGA_BRUTTO', 'WAGA_NETTO', 'CzasPracy', 'WYKONANIE']
-
     def __init__(self, begin, end):
 
         self.__Data = pd.DataFrame(
             GetDataFromFDB(begin, end, 'ProductionReport'))
 
+        self.columns = ['Data', 'Brygada', 'Warsztat', 'NrKarty', 'Kategoria', 'Forma',
+                        'Odbiorca', 'Brutto', 'BrakiMasyMl', 'BRAKI_MASY_BZB', 'BrakiFormowania',
+                        'BrakiOdprezania', 'BrakiOpekiwania', 'Stluczka', 'BrakiInne', 'BrakiRazem',
+                        'WAGA_BRUTTO', 'WAGA_NETTO', 'CzasPracy', 'WYKONANIE']
+
     def ProductionReport(self):
 
-        cols = ['Data', 'Brygada', 'Warsztat', 'NrKarty', 'Kategoria', 'Forma',
-                'Odbiorca', 'Brutto', 'BrakiRazem', 'WAGA_BRUTTO', 'WAGA_NETTO', 'CzasPracy']
+        # cols = ['Data', 'Brygada', 'Warsztat', 'NrKarty', 'Kategoria', 'Forma',
+        #         'Odbiorca', 'Brutto', 'BrakiRazem', 'WAGA_BRUTTO', 'WAGA_NETTO', 'CzasPracy']
 
         # print(self.__Data[cols].to_string(index=False))
-        return self.__Data[cols]
+        return self.__Data[self.columns]
 
     def GeneralDailyReport(self):
 
@@ -40,6 +40,35 @@ class GeneralReport:
                 'Odbiorca', 'Brutto', 'ProdukcjaNetto', 'ProcentOdpadu', 'WAGA_BRUTTO']
 
         return self.__Data[cols]
+
+    def MixedCulletSummary(self, Wytop=0):
+        '''Wytop = Suma wytopu bez wylewania'''
+        df_1 = pd.DataFrame()
+        df_1['Odpad'] = self.__Data['BrakiRazem'] * \
+            self.__Data['WAGA_BRUTTO'] / 1000
+
+        df_1['Netto'] = (self.__Data['Brutto'] -
+                         self.__Data['BrakiRazem'])  # sztuk netto
+
+        # Waga Kapy
+        df_2 = self.__Data[['WAGA_BRUTTO', 'WAGA_NETTO']]
+        df_2['Kapa'] = (self.__Data['WAGA_BRUTTO'] - self.__Data['WAGA_NETTO']).where(
+            self.__Data['WAGA_NETTO'] != 0, 300)
+
+        df = DataFrame()
+        df['Wytop_Brutto'] = self.__Data['Brutto'] * \
+            self.__Data['WAGA_BRUTTO'] / 1000
+        df['Odpad'] = df_1['Odpad']
+        df['Kapa'] = df_1['Netto'] * df_2['Kapa'] / 1000
+
+        print(df.sum())
+
+        RuznicaWytopProdukcja = Wytop - df['Wytop_Brutto'].sum()
+
+        StluczkaMieszana = RuznicaWytopProdukcja + \
+            df['Odpad'].sum() + df['Kapa'].sum()
+
+        return StluczkaMieszana
 
 
 class Summary:
@@ -59,22 +88,21 @@ class Summary:
 class ProductionSummary:
 
     def __init__(self, start, stop):
-        self.__Data = pd.DataFrame(
-            TableGenerator(start, stop, 'ProductionReport'))
+
+        self.df = GetDataFromFDB(start, stop, 'ProductionReport')
 
     def ProductionSummary(self):
 
-        df = self.__Data
-
-        arr = np.zeros([df[0].unique().size, 5], dtype=float)
+        arr = np.zeros([self.df['Data'].unique().size, 5], dtype=float)
 
         Tab = pd.DataFrame()
-        Tab['Data'] = df[0]
-        Tab['Brygada'] = df[1]
-        Tab['Produkcja_Brutto'] = df[7]
-        Tab['Braki_Razem'] = df[15]
+        Tab['Data'] = self.df['Data']
+        Tab['Brygada'] = self.df['Brygada']
+        Tab['Produkcja_Brutto'] = self.df['Brutto']
+        Tab['Braki_Razem'] = self.df['BrakiRazem']
         # Tab['Srednia_mc'] = self.__Data[]
-        Tab['Wydobycie_Brutto'] = df[7] * df[16] / 1000
+        Tab['Wydobycie_Brutto'] = self.df['Brutto'] * \
+            self.df['WAGA_BRUTTO'] / 1000
 
         self.__SredniOdpadBrygady(arr, Tab)
         self.__SredniOdpadDzienny(arr, Tab)
@@ -146,21 +174,59 @@ class ProductionSummary:
 
 class Report:
 
-    def ReportToExcel(self, listOfDataFrames, sheetNames):
+    def __init__(self, listOfDataFrames, sheetNames):
+        self.__listOfDataFrames = listOfDataFrames
+        self.__sheetNames = sheetNames
 
-        # Create some Pandas dataframes from some data.
-        df1 = listOfDataFrames[0]
-        df2 = listOfDataFrames[1]
+    def ReportToExcel(self, reportName='Report'):
 
-        # Create a Pandas Excel writer using XlsxWriter as the engine.
+        # Create a Pandas Excel writer using openpyxl as the engine
 
-        outputPath = './Resources/Output/Report.xlsx'
+        outputPath = './Resources/Output/' + reportName + '.xlsx'
         writer = ExcelWriter(outputPath, engine='openpyxl')
 
         # Write each dataframe to a different worksheet.
-        df1.to_excel(writer, index=False, sheet_name=sheetNames[0])
-        df2.to_excel(writer, index=False, sheet_name=sheetNames[1])
+
+        sn = 0
+        for df in self.__listOfDataFrames:
+            df.to_excel(
+                writer, index=False, sheet_name=self.__sheetNames[sn])
+            sn = sn + 1
 
         writer.index = False
+
         # Close the Pandas Excel writer and output the Excel file.
         writer.save()
+
+
+class BulbAverageWeight:
+
+    def __init__(self):
+        self.ListOfMeasurements = list()
+
+    def AddMeasurement(self, value):
+        self.ListOfMeasurements.append(value)
+
+    def ShowAverageValue(self):
+
+        value = 0
+
+        for i in self.ListOfMeasurements:
+            value = value + i
+
+        avr = value/len(self.ListOfMeasurements)
+
+        return avr
+
+
+# BAW = BulbAverageWeight()
+
+# while(True):
+#     val = input('dodaj pomiar: ')
+
+#     BAW.AddMeasurement(int(val))
+#     print(BAW.ShowAverageValue())
+
+
+# class SummaryPlot:
+#     def __init__(self):

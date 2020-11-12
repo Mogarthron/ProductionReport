@@ -30,7 +30,7 @@ def GetDataFromFDB(begin, end, sp):
 
 
 def TableGenerator(start, stop, sp):
-    ''' start stop mast be str object i dd.mm.yyyy format'''
+    ''' start stop mast be str object and dd.mm.yyyy format'''
     path = './Resources/Querrys/'
 
     path = path + sp + '.txt'
@@ -58,3 +58,11 @@ def TableGenerator(start, stop, sp):
     con.close()
 
     return Table
+
+
+# start = date(2020, 10, 29)
+# sp = 'ProductionReport'
+
+# df = GetDataFromFDB(start, start, sp)
+
+# df.to_excel('ProductionReport.xlsx')
