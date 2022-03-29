@@ -9,16 +9,32 @@ import matplotlib.pyplot as plt
 
 
 class GeneralReport:
-
     def __init__(self, begin, end):
 
-        self.__Data = pd.DataFrame(
-            GetDataFromFDB(begin, end, 'ProductionReport'))
+        self.__Data = pd.DataFrame(GetDataFromFDB(begin, end, "ProductionReport"))
 
-        self.columns = ['Data', 'Brygada', 'Warsztat', 'NrKarty', 'Kategoria', 'Forma',
-                        'Odbiorca', 'Brutto', 'BrakiMasyMl', 'BRAKI_MASY_BZB', 'BrakiFormowania',
-                        'BrakiOdprezania', 'BrakiOpekiwania', 'Stluczka', 'BrakiInne', 'BrakiRazem',
-                        'WAGA_BRUTTO', 'WAGA_NETTO', 'CzasPracy', 'WYKONANIE']
+        self.columns = [
+            "Data",
+            "Brygada",
+            "Warsztat",
+            "NrKarty",
+            "Kategoria",
+            "Forma",
+            "Odbiorca",
+            "Brutto",
+            "BrakiMasyMl",
+            "BRAKI_MASY_BZB",
+            "BrakiFormowania",
+            "BrakiOdprezania",
+            "BrakiOpekiwania",
+            "Stluczka",
+            "BrakiInne",
+            "BrakiRazem",
+            "WAGA_BRUTTO",
+            "WAGA_NETTO",
+            "CzasPracy",
+            "WYKONANIE",
+        ]
 
     def ProductionReport(self):
 
@@ -30,79 +46,88 @@ class GeneralReport:
 
     def GeneralDailyReport(self):
 
-        self.__Data['ProdukcjaNetto'] = self.__Data['Brutto'] - \
-            self.__Data['BrakiRazem']
+        self.__Data["ProdukcjaNetto"] = (
+            self.__Data["Brutto"] - self.__Data["BrakiRazem"]
+        )
 
-        self.__Data['ProcentOdpadu'] = self.__Data['BrakiRazem'] / \
-            self.__Data['Brutto']
+        self.__Data["ProcentOdpadu"] = self.__Data["BrakiRazem"] / self.__Data["Brutto"]
 
-        cols = ['Data', 'Brygada', 'Warsztat', 'Kategoria', 'Forma',
-                'Odbiorca', 'Brutto', 'ProdukcjaNetto', 'ProcentOdpadu', 'WAGA_BRUTTO']
+        cols = [
+            "Data",
+            "Brygada",
+            "Warsztat",
+            "Kategoria",
+            "Forma",
+            "Odbiorca",
+            "Brutto",
+            "ProdukcjaNetto",
+            "ProcentOdpadu",
+            "WAGA_BRUTTO",
+        ]
 
         return self.__Data[cols]
 
     def MixedCulletSummary(self, Wytop=0):
-        '''Wytop = Suma wytopu bez wylewania'''
+        """Wytop = Suma wytopu bez wylewania"""
         df_1 = pd.DataFrame()
-        df_1['Odpad'] = self.__Data['BrakiRazem'] * \
-            self.__Data['WAGA_BRUTTO'] / 1000
+        df_1["Odpad"] = self.__Data["BrakiRazem"] * self.__Data["WAGA_BRUTTO"] / 1000
 
-        df_1['Netto'] = (self.__Data['Brutto'] -
-                         self.__Data['BrakiRazem'])  # sztuk netto
+        df_1["Netto"] = self.__Data["Brutto"] - self.__Data["BrakiRazem"]  # sztuk netto
 
         # Waga Kapy
-        df_2 = self.__Data[['WAGA_BRUTTO', 'WAGA_NETTO']]
-        df_2['Kapa'] = (self.__Data['WAGA_BRUTTO'] - self.__Data['WAGA_NETTO']).where(
-            self.__Data['WAGA_NETTO'] != 0, 300)
+        df_2 = self.__Data[["WAGA_BRUTTO", "WAGA_NETTO"]]
+        df_2["Kapa"] = (self.__Data["WAGA_BRUTTO"] - self.__Data["WAGA_NETTO"]).where(
+            self.__Data["WAGA_NETTO"] != 0, self.__Data["WAGA_BRUTTO"] * 0.6
+        )
 
         df = DataFrame()
-        df['Wytop_Brutto'] = self.__Data['Brutto'] * \
-            self.__Data['WAGA_BRUTTO'] / 1000
-        df['Odpad'] = df_1['Odpad']
-        df['Kapa'] = df_1['Netto'] * df_2['Kapa'] / 1000
+        df["Wytop_Brutto"] = self.__Data["Brutto"] * self.__Data["WAGA_BRUTTO"] / 1000
+        df["Odpad"] = df_1["Odpad"]
+        df["Kapa"] = df_1["Netto"] * df_2["Kapa"] / 1000
 
         print(df.sum())
 
-        RuznicaWytopProdukcja = Wytop - df['Wytop_Brutto'].sum()
+        RuznicaWytopProdukcja = Wytop - df["Wytop_Brutto"].sum()
 
-        StluczkaMieszana = RuznicaWytopProdukcja + \
-            df['Odpad'].sum() + df['Kapa'].sum()
+        StluczkaMieszana = RuznicaWytopProdukcja + df["Odpad"].sum() + df["Kapa"].sum()
 
         return StluczkaMieszana
 
 
-class Summary:
+start = datetime.date(2021, 7, 1)
+end = datetime.date(2021, 7, 31)
+pr = GeneralReport(start, end)
 
+print(pr.MixedCulletSummary(78237))
+
+
+class Summary:
     def __init__(self, begin, end):
-        self.SummaryData = DataFrame(
-            GetDataFromFDB(begin, end, 'DailySummary'))
+        self.SummaryData = DataFrame(GetDataFromFDB(begin, end, "DailySummary"))
 
     def DailyProductionSummary(self):
 
-        DailyPullRate = self.SummaryData.groupby(
-            self.SummaryData['Data'])
+        DailyPullRate = self.SummaryData.groupby(self.SummaryData["Data"])
 
         print(DailyPullRate.sum())
 
 
 class ProductionSummary:
-
     def __init__(self, start, stop):
 
-        self.df = GetDataFromFDB(start, stop, 'ProductionReport')
+        self.df = GetDataFromFDB(start, stop, "ProductionReport")
 
     def ProductionSummary(self):
 
-        arr = np.zeros([self.df['Data'].unique().size, 5], dtype=float)
+        arr = np.zeros([self.df["Data"].unique().size, 5], dtype=float)
 
         Tab = pd.DataFrame()
-        Tab['Data'] = self.df['Data']
-        Tab['Brygada'] = self.df['Brygada']
-        Tab['Produkcja_Brutto'] = self.df['Brutto']
-        Tab['Braki_Razem'] = self.df['BrakiRazem']
+        Tab["Data"] = self.df["Data"]
+        Tab["Brygada"] = self.df["Brygada"]
+        Tab["Produkcja_Brutto"] = self.df["Brutto"]
+        Tab["Braki_Razem"] = self.df["BrakiRazem"]
         # Tab['Srednia_mc'] = self.__Data[]
-        Tab['Wydobycie_Brutto'] = self.df['Brutto'] * \
-            self.df['WAGA_BRUTTO'] / 1000
+        Tab["Wydobycie_Brutto"] = self.df["Brutto"] * self.df["WAGA_BRUTTO"] / 1000
 
         self.__SredniOdpadBrygady(arr, Tab)
         self.__SredniOdpadDzienny(arr, Tab)
@@ -110,87 +135,81 @@ class ProductionSummary:
 
         Summary = pd.DataFrame()
 
-        Summary['Data'] = Tab['Data'].unique()
-        Summary['Brygada_1'] = arr[0:, 0]
-        Summary['Brygada_2'] = arr[0:, 1]
-        Summary['Brygada_3'] = arr[0:, 2]
-        Summary['Odpad_na_Dzien'] = arr[0:, 3]
-        Summary['Wydobycie_Brutto'] = arr[0:, 4]
+        Summary["Data"] = Tab["Data"].unique()
+        Summary["Brygada_1"] = arr[0:, 0]
+        Summary["Brygada_2"] = arr[0:, 1]
+        Summary["Brygada_3"] = arr[0:, 2]
+        Summary["Odpad_na_Dzien"] = arr[0:, 3]
+        Summary["Wydobycie_Brutto"] = arr[0:, 4]
 
         return Summary
 
     def __SredniOdpadBrygady(self, arr, Tab):
-        _data = Tab['Data'][0]
+        _data = Tab["Data"][0]
 
         i = 0
 
-        for (Data, Brygada), group in Tab.groupby(['Data', 'Brygada']):
+        for (Data, Brygada), group in Tab.groupby(["Data", "Brygada"]):
 
-            if (Data != _data):
+            if Data != _data:
                 _data = Data
                 i = i + 1
 
-            if (Brygada == 1):
-                arr[i][0] = group['Braki_Razem'].sum(
-                ) / group['Produkcja_Brutto'].sum()
-            elif (Brygada == 2):
-                arr[i][1] = group['Braki_Razem'].sum(
-                ) / group['Produkcja_Brutto'].sum()
+            if Brygada == 1:
+                arr[i][0] = group["Braki_Razem"].sum() / group["Produkcja_Brutto"].sum()
+            elif Brygada == 2:
+                arr[i][1] = group["Braki_Razem"].sum() / group["Produkcja_Brutto"].sum()
             else:
-                arr[i][2] = group['Braki_Razem'].sum(
-                ) / group['Produkcja_Brutto'].sum()
+                arr[i][2] = group["Braki_Razem"].sum() / group["Produkcja_Brutto"].sum()
 
         return arr
 
     def __SredniOdpadDzienny(self, arr, Tab):
-        _data = Tab['Data'][0]
+        _data = Tab["Data"][0]
         i = 0
 
-        for Data, group in Tab.groupby(['Data']):
+        for Data, group in Tab.groupby(["Data"]):
 
-            if (Data != _data):
+            if Data != _data:
                 _data = Data
                 i = i + 1
 
-            arr[i][3] = group['Braki_Razem'].sum(
-            ) / group['Produkcja_Brutto'].sum()
+            arr[i][3] = group["Braki_Razem"].sum() / group["Produkcja_Brutto"].sum()
 
         return arr
 
     def __WydobycieBruttoDzien(self, arr, Tab):
-        _data = Tab['Data'][0]
+        _data = Tab["Data"][0]
         i = 0
 
-        for Data, group in Tab.groupby(['Data']):
+        for Data, group in Tab.groupby(["Data"]):
 
-            if (Data != _data):
+            if Data != _data:
                 _data = Data
                 i = i + 1
 
-            arr[i][4] = group['Wydobycie_Brutto'].sum()
+            arr[i][4] = group["Wydobycie_Brutto"].sum()
 
         return arr
 
 
 class Report:
-
     def __init__(self, listOfDataFrames, sheetNames):
         self.__listOfDataFrames = listOfDataFrames
         self.__sheetNames = sheetNames
 
-    def ReportToExcel(self, reportName='Report'):
+    def ReportToExcel(self, reportName="Report"):
 
         # Create a Pandas Excel writer using openpyxl as the engine
 
-        outputPath = './Resources/Output/' + reportName + '.xlsx'
-        writer = ExcelWriter(outputPath, engine='openpyxl')
+        outputPath = "./Resources/Output/" + reportName + ".xlsx"
+        writer = ExcelWriter(outputPath, engine="openpyxl")
 
         # Write each dataframe to a different worksheet.
 
-        sn = 0
+        sn = 0  # sheet names
         for df in self.__listOfDataFrames:
-            df.to_excel(
-                writer, index=False, sheet_name=self.__sheetNames[sn])
+            df.to_excel(writer, index=False, sheet_name=self.__sheetNames[sn])
             sn = sn + 1
 
         writer.index = False
@@ -198,9 +217,26 @@ class Report:
         # Close the Pandas Excel writer and output the Excel file.
         writer.save()
 
+    def ReportToHTML(self):
+
+        year = int(input("podaj rok raportu (YYYY): "))
+        month = int(input("podaj miesiąc raportu (MM): "))
+        st = monthrange(year, month)
+
+        FirstDayOfMonth = datetime.date(year, month, 1)
+        LastDayOfMonth = datetime.date(year, month, st[1])
+        reportName = "Raport_" + str(year) + "_" + str(month)
+
+        gr = GeneralReport(FirstDayOfMonth, LastDayOfMonth)
+
+        path = "./Resources/Output/" + reportName + ".html"
+
+        html = gr.GeneralDailyReport()
+
+        html.to_html(index=False, buf=path)
+
 
 class BulbAverageWeight:
-
     def __init__(self):
         self.ListOfMeasurements = list()
 
@@ -214,7 +250,7 @@ class BulbAverageWeight:
         for i in self.ListOfMeasurements:
             value = value + i
 
-        avr = value/len(self.ListOfMeasurements)
+        avr = value / len(self.ListOfMeasurements)
 
         return avr
 
@@ -228,5 +264,26 @@ class BulbAverageWeight:
 #     print(BAW.ShowAverageValue())
 
 
-# class SummaryPlot:
-#     def __init__(self):
+class SummaryPlot:
+    def __init__(self, chartTitle):
+        self.__chartTitle = chartTitle
+
+    def CreatePlot(self):
+        dr1 = datetime.date(2020, 11, 1)
+        dr2 = datetime.date(2020, 11, 17)
+
+        ps = ProductionSummary(dr1, dr2)
+
+        # print(ps.ProductionSummary())
+
+        x = ps.ProductionSummary()["Data"]
+        y = ps.ProductionSummary()["Brygada_1"]
+
+        plt.bar(x, y, label="Brygada 1")
+
+        plt.show()
+
+
+# sp = SummaryPlot('Production Summary')
+
+# sp.CreatePlot()

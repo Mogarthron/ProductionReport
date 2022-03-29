@@ -28,8 +28,6 @@ def ControllLogic(quitCheck):
     if (quitCheck == 2):
         MonthlyReportToExcel()
 
-    # print('gagaga')
-
 
 def SimplyDayliReport():
 
